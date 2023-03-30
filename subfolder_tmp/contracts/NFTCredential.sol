@@ -152,6 +152,8 @@ contract NFTCredential is ERC721A, Ownable {　//クラスの継承
         return _ownedCredential[tokenId];
     }
 
+    //既にこのNFT（譲渡不可なNFT/SBT)を持っているユーザーには、これを譲渡できない
+    //同じユーザーがこのNFTを２枚以上持つことはできない
     function transferOwnership(address newOwner) public override onlyOwner {
         // Banned for transfering ownership to a user who has this token already,
         // because to make sure that the status of credential ID mappings will not be complicated.
@@ -160,19 +162,23 @@ contract NFTCredential is ERC721A, Ownable {　//クラスの継承
     }
 
     // To be soulbound NFT except owner operations.
+    //_beforeTokenTransfersはERC721で、_tokenTransfersの直前に呼び出される、という決まりになっているが、
+    //ここをOwner(NFTのオーナーではなく、コントラクトのオーナー)だけが呼び出せるようにすることで、
+    //一般のユーザーは_tokenTransferに必要な、_beforeTokenTransferが実行できなくなり、譲渡ができないことになる
     function _beforeTokenTransfers(
         address,
         address,
         uint256,
         uint256
     ) internal view override onlyOwner {}
+    //intervalは、自身とそれを継承するクラスからしか参照できない、ということ。
 
     function generateTokenURI(
         string memory _description,
         string memory _imageURI,
         string memory _externalURI
     ) internal view returns (string memory) {
-        bytes memory _attributes = abi.encodePacked('"attributes": []');
+        bytes memory _attributes = abi.encodePacked('"attributes": []');　//solidityのデータ型をバイナリ（Base64型）に変換
         string memory json = Base64.encode(
             abi.encodePacked(
                 '{"name": "',
@@ -191,7 +197,7 @@ contract NFTCredential is ERC721A, Ownable {　//クラスの継承
                 "}"
             )
         );
-        return string(abi.encodePacked("data:application/json;base64,", json));
+        return string(abi.encodePacked("data:application/json;base64,", json));　//jsonはjson形式で渡す、という意味の指定
     }
 
     // =============================================================
