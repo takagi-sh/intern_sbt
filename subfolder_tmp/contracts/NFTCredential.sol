@@ -90,12 +90,12 @@ contract NFTCredential is ERC721A, Ownable {　//クラスの継承
         // because to make sure that the status of credential ID mappings will not be complicated.
         require(to != owner(), "The to-address must NOT be OWNER.");
 
-        string memory _credentialId = ownedCredential(tokenId); tokenID -> 対応するCredential IDへの写像
+        string memory _credentialId = ownedCredential(tokenId); //tokenID -> 対応するCredential IDへの写像
         bool _hasToAddr = _credentialOwnerships[_credentialId][to];
         require(!_hasToAddr, "The to-address has the same credential already.");
 
         super.transferFrom(from, to, tokenId);
-        // update the credential ID mappings
+        // update the credential ID mappings //true/falseは、そのNFTを所有しているか動画を表す
         _credentialOwnerships[_credentialId][from] = false;
         _credentialOwnerships[_credentialId][to] = true;
     }
@@ -109,15 +109,28 @@ contract NFTCredential is ERC721A, Ownable {　//クラスの継承
     ) public onlyOwner {
         // update the credential ID mappings
         string memory _currentCredentialId = ownedCredential(tokenId);
-        bytes32 _currentHash = keccak256(bytes(_currentCredentialId));
+        bytes32 _currentHash = keccak256(bytes(_currentCredentialId)); 
+        //hashを用いることで、直接credentialIdを外部に見られないようにしている。
+        //もしくは、string型のcredentialIdは文字列として、とても長い可能性があるので、hashを用いて処理を高速化している
+        //なお、ハッシュの衝突は確率的に起こらない
+        //_currentCredentialIdと_credentialIdの二つを用いることで、データに改竄がないようにしている。（嘘かも）
+        //_credentialIdがNFTをミントしたい先、_currentCredentialIdが現在の所有者なので、
+        //この二つが同じ場合は、何も処理せず、異なった場合だけ、ifの以下のように、トークンの所有権を移す
+        //具体的には、
+        //_credentialOwnerships[_currentCredentialId][_tokenOwner] = false;
+        //_credentialOwnerships[_credentialId][_tokenOwner] = true;
+        //の部分が所有権の移動に対応する
         bytes32 _newHash = keccak256(bytes(_credentialId));
         if (_currentHash != _newHash) {
             _ownedCredential[tokenId] = _credentialId;
             address _tokenOwner = ownerOf(tokenId);
-            _credentialOwnerships[_currentCredentialId][_tokenOwner] = false;
+            _credentialOwnerships[_currentCredentialId][_tokenOwner] = false; 
+            //なぜ_credentialId(こちらが新しいcredential)がtrueになり、_currentCredentialIdがfalseになるか
             _credentialOwnerships[_credentialId][_tokenOwner] = true;
         }
         // update the tokenURI
+        //トークンにメタデータを結びつける処理を行う
+        //（この処理を行う前の時点で、既にtokenIdは、credentialIdと結びついている）
         _setTokenURI(tokenId, generateTokenURI(_description, _imageURI, _externalURI));
     }
 
