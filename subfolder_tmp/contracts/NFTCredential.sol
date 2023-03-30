@@ -6,9 +6,9 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
-contract NFTCredential is ERC721A, Ownable {
+contract NFTCredential is ERC721A, Ownable {　//クラスの継承
     // Max batch size for minting one time
-    uint256 private _maxBatchSize;
+    uint256 private _maxBatchSize;　//発行できるNFTの最大枚数
 
     // Mapping from token Id to hashed credential ID
     mapping(uint256 => string) private _ownedCredential;
@@ -90,7 +90,7 @@ contract NFTCredential is ERC721A, Ownable {
         // because to make sure that the status of credential ID mappings will not be complicated.
         require(to != owner(), "The to-address must NOT be OWNER.");
 
-        string memory _credentialId = ownedCredential(tokenId);
+        string memory _credentialId = ownedCredential(tokenId); tokenID -> 対応するCredential IDへの写像
         bool _hasToAddr = _credentialOwnerships[_credentialId][to];
         require(!_hasToAddr, "The to-address has the same credential already.");
 
